@@ -3,6 +3,7 @@ const HtmlPlugin = require('html-webpack-plugin')
 
 const TEMPLATE = path.resolve(__dirname, './public/index.html')
 const SRC = path.resolve(__dirname, './src')
+const LIB = path.resolve(__dirname, './lib')
 
 module.exports = {
   entry: './src/index.tsx',
@@ -15,7 +16,7 @@ module.exports = {
 
   module: {
     rules: [
-      { test: /\.(t|j)sx?$/, include: SRC, use: 'babel-loader', enforce: 'pre' }, 
+      { test: /\.(t|j)sx?$/, include: [SRC, LIB], use: 'babel-loader', enforce: 'pre' }, 
     ]
   },
 

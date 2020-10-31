@@ -1,5 +1,6 @@
-import React from '../lib/react'
-import { render } from '../lib/reactDom'
+// import React from './lib/react'
+import React from '../lib/react/index'
+import { render } from '../lib/reactDom/index'
 
 const a = <div onClick={() => console.log('click')}>
   <div style={{color: 'red'}}>
