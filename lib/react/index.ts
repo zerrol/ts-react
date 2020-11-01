@@ -1,13 +1,24 @@
 
 class Component {
 
+  constructor() {}
+
+  render() {
+    return null
+  }
 }
 
-export function createElement(type: string | Component, attributes, ...children) {
+export function createElement(type: any , attributes, ...children) {
   let element
 
   if(typeof type === 'string') {
     element = document.createElement(type)
+  }
+
+  if(typeof type === 'function' && type !== null) {
+    const component = new type()
+    element = component.render()
+    console.log('component element', element)
   }
 
   console.log('type', type)
