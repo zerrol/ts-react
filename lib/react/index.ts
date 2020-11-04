@@ -1,61 +1,115 @@
+class ElementWrapper {
+  root: HTMLElement
 
-class Component {
+  constructor(type: string) {
+    this.root = document.createElement(type)
+  }
+  
+  appendChild(child: ElementWrapper | TextWrapper) {
+    this.root.appendChild(child.root)
+  }
 
-  constructor() {}
+  setAttribute(attributes: NamedNodeMap) {
+    // 处理元素的属性
+    for (const key in attributes) {
+      if (!attributes.hasOwnProperty(key)) continue
+      const attr = attributes[key]
 
-  render() {
-    return null
+      // 处理style
+      if (key === "style") {
+        for (const styleKey in attr) {
+          if (attr.hasOwnProperty(styleKey)) {
+            this.root.setAttribute(key, `${styleKey}: ${attr[styleKey]}`)
+          }
+        }
+
+        continue
+      }
+
+      // 属性赋值
+      // Attr
+      this.root.setAttribute(key, attributes[key].value)
+    }
   }
 }
 
-export function createElement(type: any , attributes, ...children) {
-  let element
+class TextWrapper {
+  root: Text
 
-  if(typeof type === 'string') {
-    element = document.createElement(type)
+  constructor(text: string) {
+    this.root = document.createTextNode(text)
+  }
+}
+
+export abstract class Component<P = any, S = any> {
+  state?: S
+
+  _root?: HTMLElement
+  props: P
+  children: any[]
+
+  abstract render(): ElementWrapper | Component<P, S>
+
+  constructor(props: P) {
+    this.props = props || Object.create(null)
+    this.children = []
   }
 
-  if(typeof type === 'function' && type !== null) {
-    const component = new type()
-    element = component.render()
-    console.log('component element', element)
+  setState(newState: S) {
+    this.state = newState
   }
 
-  console.log('type', type)
-  console.log('config', attributes)
-  console.log('children', children)
+  setAttribute(key: string, value: string) {
+    this.props[key] = value
+  }
 
-  for (const key in attributes) {
-    if (!attributes.hasOwnProperty(key)) 
-      continue
-    const attr = attributes[key]
+  appendChild(child) {
+    // 在children push之前不能访问root
+    // 如果访问root，会导致节点被生成，而此时children还不存在
 
-    // 处理style
-    if(key === 'style') {
-      for (const styleKey in attr) {
-        if (attr.hasOwnProperty(styleKey)) {
-          element.setAttribute(key, `${styleKey}: ${attr[styleKey]}`)
-        }
+    this.children.push(child)
+    console.log('this.children', this.children)
+  }
+
+  get root(): HTMLElement {
+    if(!this._root) {
+      this._root = this.render().root
+    }
+    return this._root
+  }
+}
+
+export function createElement(type: any, attributes: NamedNodeMap, ...children) {
+  let element: Component | ElementWrapper
+
+  if (typeof type === "string") {
+    element = new ElementWrapper(type)
+    element.setAttribute(attributes)
+  }else {
+    element = new type()
+  }
+
+  const insertChildren = (_children) => {
+    for(let child of _children) {
+      let childElement = child
+      if (typeof child === "string") {
+        childElement = new TextWrapper(child)
       }
 
-      continue
+      if(child instanceof Array) {
+        insertChildren(child)
+      }else {
+        element.appendChild(childElement)
+      }
     }
-
-    // 属性赋值
-    element.setAttribute(key, attributes[key])
   }
 
-  for (const child of children) {
-    let childElement = child
-    if(typeof child === 'string') {
-      childElement = document.createTextNode(child)
-    }
-    element.appendChild(childElement) 
-  }
+  insertChildren(children)
 
+  console.log('createElement return', element)
   return element
 }
 
 export default {
-  createElement
+  createElement,
 }
