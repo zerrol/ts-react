@@ -2,27 +2,29 @@ import React from '../lib/react/index'
 import { render } from '../lib/reactDom/index'
 import { Component } from '../lib/react/index'
 
-// const jsxElement = <div onClick={() => console.log('click')}>
-//   <div style={{color: 'red'}}>
-//     hello toy react
-//   </div>
-
-//   <div>
-//     <div>hello</div>
-//     棉花糖
-//   </div>
-// </div>
-
 interface IState {
-  name: string
+  count: number
 }
 
 class MyComponent extends Component<any, IState> {
+  state: IState
+
   constructor(props: any) {
     super(props)  
+    this.state = {
+      count: 0
+    }
   }
 
-  render() {
+  onClick = () => {
+    this.setState({
+      count: this.state.count + 1
+    })
+
+    console.log('onClick', this.state.count)
+  }
+
+  render = () => {
     console.log('render', this.children)
     return (
       <div>
@@ -30,33 +32,32 @@ class MyComponent extends Component<any, IState> {
         <div style={{color: 'red'}}>
           棉花糖 我是可爱的棉小花
         </div>
-        <ChildComponent />
+        <ChildComponent onClick={this.onClick}/>
         { 
           this.children
         }
+        {
+          this.state.count
+        }
+
+        <button onClick={this.onClick}>add</button>
       </div>
     )
   }
 }
 
 class ChildComponent extends Component {
+  constructor(props) {
+    super(props)
+  }
+
   render() {
     return (
-      <div>
+      <div onClick={this.props.onClick}>
         我是child component
       </div>
     )
   }
 }
 
-render(<MyComponent>
-    <div>
-      child
-      <div>
-        child2
-      </div>
-      <div>
-        child3
-      </div>
-    </div>
-  </MyComponent>, document.getElementById('root'))
+render(<MyComponent />, document.getElementById('root'))

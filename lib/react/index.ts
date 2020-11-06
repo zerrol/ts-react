@@ -9,7 +9,7 @@ class ElementWrapper {
     this.root.appendChild(child.root)
   }
 
-  setAttribute(attributes: NamedNodeMap) {
+  setAttribute(attributes: any) {
     // 处理元素的属性
     for (const key in attributes) {
       if (!attributes.hasOwnProperty(key)) continue
@@ -26,6 +26,11 @@ class ElementWrapper {
         continue
       }
 
+      // 事件绑定
+      if (key === 'onClick') {
+        this.root.addEventListener('click', attr)
+      }
+
       // 属性赋值
       // Attr
       this.root.setAttribute(key, attributes[key].value)
@@ -36,8 +41,8 @@ class ElementWrapper {
 class TextWrapper {
   root: Text
 
-  constructor(text: string) {
-    this.root = document.createTextNode(text)
+  constructor(text: string | number) {
+    this.root = document.createTextNode(text.toString())
   }
 }
 
@@ -57,10 +62,12 @@ export abstract class Component<P = any, S = any> {
 
   setState(newState: S) {
     this.state = newState
+    this.update()
   }
 
-  setAttribute(key: string, value: string) {
-    this.props[key] = value
+  setAttribute(props) {
+    // this.props[key] = value
+    this.props = props
   }
 
   appendChild(child) {
@@ -68,7 +75,14 @@ export abstract class Component<P = any, S = any> {
     // 如果访问root，会导致节点被生成，而此时children还不存在
 
     this.children.push(child)
-    console.log('this.children', this.children)
+  }
+
+  update() {
+    const root = this.root
+    const parent = root.parentNode
+    this._root = undefined
+    parent?.removeChild(root)
+    parent?.appendChild(this.root)
   }
 
   get root(): HTMLElement {
@@ -84,15 +98,15 @@ export function createElement(type: any, attributes: NamedNodeMap, ...children) 
 
   if (typeof type === "string") {
     element = new ElementWrapper(type)
-    element.setAttribute(attributes)
   }else {
     element = new type()
   }
+  element.setAttribute(attributes)
 
   const insertChildren = (_children) => {
     for(let child of _children) {
       let childElement = child
-      if (typeof child === "string") {
+      if (typeof child === "string" || typeof child === "number") {
         childElement = new TextWrapper(child)
       }
 
