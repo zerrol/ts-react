@@ -1,5 +1,5 @@
 import React from '../lib/react/index'
-import { render } from '../lib/reactDom/index'
+import { render } from '../lib/react-dom/index'
 import { Component } from '../lib/react/index'
 
 interface IState {
