@@ -21,7 +21,7 @@ export default class FiberRoot {
   current: FiberNode
   
   // 已经结束的workInProgress的HostRoot, 准备被commit
-  finishedWork?: FiberNode
+  finishedWork: FiberNode | null = null
 
   constructor(containerInfo, tag: RootTag, current: FiberNode) {
     this.tag = tag
