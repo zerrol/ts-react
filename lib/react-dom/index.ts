@@ -30,7 +30,10 @@ export function render(element: React$Element, container: HTMLElement | null, ca
  */
 function legacyRenderSubtreeIntoContainer(parentComponent: null, children: ReactNodeList , container: Container) {
   let root = container._reactRootContainer = new ReactDOMRoot(container, RootTag.BlockingRoot)
+  let fiberRoot = root._internalRoot
 
-  // let fiberRoot: FiberRoot = root.
-
+  // TODO 源码还会处理处理callback , 暂时忽略
+  // 这里源码中会有一个unbatchedUpdates()，对context和callback做一些处理，因为首次渲染的时候，是非批量的，这里暂时先忽略
+  updateContainer(children, fiberRoot, parentComponent)
 }
+

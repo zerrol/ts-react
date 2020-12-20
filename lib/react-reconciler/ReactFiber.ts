@@ -8,8 +8,9 @@ export default class FiberNode {
   stateNode?: FiberRoot
 
   // Fiber
-
+  alternate?: FiberNode
   pendingProps: any
+
 
   constructor(tag: WorkTag, pendingProps: any, key: null | string) {
     this.tag = tag
