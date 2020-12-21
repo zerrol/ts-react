@@ -1,5 +1,5 @@
 import { RootTag } from '@/constants'
-import FiberNode, { createHostRootFiber } from './ReactFiber'
+import Fiber, { createHostRootFiber } from './ReactFiber'
 
 export default class FiberRoot {
   static create(containerInfo, tag: RootTag) {
@@ -10,7 +10,7 @@ export default class FiberRoot {
     const root = new FiberRoot(containerInfo, tag, uninitializedFiber)
     uninitializedFiber.stateNode = root
 
-    // TODO: 在创建FiberRoot的时候，初始化UpdateQunue
+    // TODO: 在创建FiberRoot的时候，initializeUpdateQueue
     return root
   }
 
@@ -18,12 +18,12 @@ export default class FiberRoot {
 
   tag: RootTag
   
-  current: FiberNode
+  current: Fiber
   
   // 已经结束的workInProgress的HostRoot, 准备被commit
-  finishedWork: FiberNode | null = null
+  finishedWork: Fiber | null = null
 
-  constructor(containerInfo, tag: RootTag, current: FiberNode) {
+  constructor(containerInfo, tag: RootTag, current: Fiber) {
     this.tag = tag
     this.current = current
     this.containerInfo = containerInfo

@@ -2,6 +2,7 @@
 
 import { RootTag } from '@/constants'
 import { React$Element, ReactNodeList } from '@/interface/index'
+import { updateContainer } from '@/react-reconciler'
 import ReactDOMRoot from './ReactDOMRoot'
 
 export type Container = HTMLElement & {
