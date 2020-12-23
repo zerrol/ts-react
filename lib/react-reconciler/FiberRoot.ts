@@ -1,4 +1,4 @@
-import { RootTag } from '@/constants'
+import { RootTag } from '@/shared/constants'
 import Fiber, { createHostRootFiber } from './ReactFiber'
 
 export default class FiberRoot {

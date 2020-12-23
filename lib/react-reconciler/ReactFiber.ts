@@ -1,4 +1,5 @@
-import { RootTag, WorkTag } from '@/constants'
+import { FiberFlags, RootTag, WorkTag } from '@/shared/constants'
+import { ReactElement, ReactEmpty } from '@/shared/interface'
 import FiberRoot from './FiberRoot'
 import { UpdateQueue } from './interface'
 
@@ -9,7 +10,12 @@ export default class Fiber {
   }
 
   key: null | string
+
+  // 标识Fiber类型的标签，是Function组件还是Class组件还是原生元素
   tag: WorkTag
+
+  // 副作用flag，用来标志fiber reconcile完成后，渲染到Dom上时应该做什么处理的标志
+  flags: FiberFlags = FiberFlags.NoFlags
 
   stateNode?: FiberRoot
 
@@ -19,9 +25,10 @@ export default class Fiber {
 
   // Fiber
   alternate: Fiber | null = null 
-  pendingProps: any
-
   child: Fiber | null = null
+  return: Fiber | null = null
+
+  pendingProps: any
 
   constructor(tag: WorkTag, pendingProps: any, key: null | string) {
     this.tag = tag
@@ -58,4 +65,29 @@ export function createWorkInProgress(current: Fiber, pendingProps: any) {
 
   // ... initailize other property
   return workInProgress
+}
+
+
+
+function shouldConstruct(Component: Function) {
+  const prototype = Component.prototype;
+  return !!(prototype && prototype.isReactComponent);
+}
+
+export function createFiberFromElement(
+  element: ReactElement
+  // ...mode、lanes
+) {
+  let fiberTag = WorkTag.IndeterminateComponent
+  if(typeof element.type === 'function') {
+    // 这里如果是functionComponent 那么，type的值还是Indeterminate，表示暂未确定类型的组件
+    // 会在后面的对于这个fiber的beginWork阶段，再去确定他的tag
+    if(shouldConstruct(element.type)) {
+      fiberTag = WorkTag.ClassComponent
+    }
+  }else if(typeof element.type === 'string') {
+    fiberTag = WorkTag.HostComponent
+  }
+
+  return Fiber.create(fiberTag, element.props, element.key) 
 }

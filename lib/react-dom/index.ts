@@ -1,7 +1,7 @@
 
 
-import { RootTag } from '@/constants'
-import { React$Element, ReactNodeList } from '@/interface/index'
+import { RootTag } from '@/shared/constants'
+import { ReactElement, ReactNodeList } from '@/shared/interface'
 import { updateContainer } from '@/react-reconciler'
 import ReactDOMRoot from './ReactDOMRoot'
 
@@ -15,7 +15,7 @@ export type Container = HTMLElement & {
  * @param container 容器，render时为html节点
  * @param callback 完成渲染的回调，暂时先忽略
  */
-export function render(element: React$Element, container: HTMLElement | null, callback?: Function) {
+export function render(element: ReactElement, container: HTMLElement | null, callback?: Function) {
   if(!container) 
     throw new Error('can not render on invalid dom node')
 

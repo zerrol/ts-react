@@ -60,4 +60,4 @@ class ChildComponent extends Component {
   }
 }
 
-render(<MyComponent />, document.getElementById('root'))
+render(<div>hello</div>, document.getElementById('root'))

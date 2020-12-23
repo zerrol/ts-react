@@ -1,4 +1,4 @@
-import { ReactNodeList } from "@/interface";
+import { ReactNodeList } from "@/shared/interface";
 import FiberRoot from "./FiberRoot";
 import { scheduleUpdateOnFiber } from "./ReactFiberWorkLoop";
 import { createUpdate, enqueueUpdate } from "./ReactUpdateQueue";

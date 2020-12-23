@@ -1,5 +1,5 @@
 import { Container } from './index'
-import { RootTag } from '@/constants'
+import { RootTag } from '@/shared/constants'
 import FiberRoot from '@/react-reconciler/FiberRoot'
 
 export default class {

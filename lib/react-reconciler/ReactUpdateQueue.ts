@@ -52,3 +52,11 @@ export function enqueueUpdate<State>(fiber: Fiber, update: Update<State>) {
   }
   sharedQueue.pending = update
 }
+
+export function processUpdateQueue(workInProgress: Fiber) {
+  const queue = workInProgress.updateQueue
+  if(!queue) return
+
+  workInProgress.memoizedState = queue?.shared.pending?.payload
+  queue.shared.pending = null
+}

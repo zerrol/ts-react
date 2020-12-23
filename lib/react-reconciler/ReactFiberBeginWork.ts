@@ -1,7 +1,7 @@
-import { WorkTag } from "@/constants";
+import { WorkTag } from "@/shared/constants";
 import { reconcileChildFibers } from "./ReactChildFiber";
 import Fiber from "./ReactFiber";
-
+import { processUpdateQueue } from "./ReactUpdateQueue";
 
 export function beginWork(
   current: Fiber | null, 
@@ -31,11 +31,13 @@ function updateHostRoot(
   // TODO: ...deal with context
 
   // TODO: ...updateQueue & state & props
+  processUpdateQueue(workInProgress)
 
-  // TODO: nextChildren = workInProgress.memoizedState.element
+  const nextChildren = workInProgress.memoizedState.element
+  // TODO prevState VS curState
 
-  reconcileChildren(current, workInProgress)
-  return  workInProgress.child
+  reconcileChildren(current, workInProgress, nextChildren)
+  return workInProgress.child
 }
 
 
@@ -46,7 +48,7 @@ function updateHostRoot(
 export function reconcileChildren(
   current: Fiber | null,
   workInProgress: Fiber,
-  // nextChildren: any,
+  nextChildren: any,
   // lanes
 ) {
 
@@ -59,7 +61,7 @@ export function reconcileChildren(
   workInProgress.child = reconcileChildFibers(
     workInProgress, 
     current.child,
-    // nextChildren,
+    nextChildren,
     // lanes
   ) 
 }
