@@ -19,10 +19,21 @@ export function beginWork(
   switch(workInProgress.tag) {
     case WorkTag.HostRoot:
       return updateHostRoot(current, workInProgress)
+    case WorkTag.HostComponent:
+      return updateHostComponent(current, workInProgress)  
   }
 
 }
 
+/**
+ * 下面只要是根据WorkTag对应类型做更新
+ */
+
+/**
+ * 更新HostRoot, 主要是reactDom.render(el,root)中的第二个参数root
+ * @param current 已经存在的fiber
+ * @param workInProgress 当前正在渲染的fiber
+ */
 function updateHostRoot(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -38,6 +49,25 @@ function updateHostRoot(
 
   reconcileChildren(current, workInProgress, nextChildren)
   return workInProgress.child
+}
+
+/**
+ * 更新HostComponent，主要是指原生的标签例如，div\span等
+ * @param current 
+ * @param workInProgress 
+ */
+function updateHostComponent(
+  current: Fiber | null, 
+  workInProgress: Fiber, 
+  // lanes
+) {
+  const nextProps = workInProgress.pendingProps
+  // 注意：这里获取nextChildren的方式和之前写过的updateHostRoot的处理方式不同
+  let nextChildren = nextProps.children
+
+  const isDirectTextChild = shouldSetTextContent(workInProgress.type, nextProps)
+  
+  
 }
 
 
@@ -64,4 +94,18 @@ export function reconcileChildren(
     nextChildren,
     // lanes
   ) 
+}
+
+
+function shouldSetTextContent(type: string, props: any ) {
+  return (
+    type === 'textarea' ||
+    type === 'option' ||
+    type === 'noscript' ||
+    typeof props.children === 'string' ||
+    typeof props.children === 'number' ||
+    (typeof props.dangerouslySetInnerHTML === 'object' &&
+      props.dangerouslySetInnerHTML !== null &&
+      props.dangerouslySetInnerHTML.__html != null)
+  )
 }

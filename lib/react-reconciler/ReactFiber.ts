@@ -14,6 +14,9 @@ export default class Fiber {
   // 标识Fiber类型的标签，是Function组件还是Class组件还是原生元素
   tag: WorkTag
 
+  // 表示Fiber的类型，function/class/div/span等标签名
+  type: string | null = null
+
   // 副作用flag，用来标志fiber reconcile完成后，渲染到Dom上时应该做什么处理的标志
   flags: FiberFlags = FiberFlags.NoFlags
 
@@ -89,5 +92,8 @@ export function createFiberFromElement(
     fiberTag = WorkTag.HostComponent
   }
 
-  return Fiber.create(fiberTag, element.props, element.key) 
+  const fiber = Fiber.create(fiberTag, element.props, element.key) 
+  fiber.type = element.type
+
+  return fiber
 }
