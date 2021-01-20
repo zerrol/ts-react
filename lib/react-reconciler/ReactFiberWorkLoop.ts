@@ -1,6 +1,7 @@
 import FiberRoot from "./FiberRoot"
 import Fiber, { createWorkInProgress } from "./ReactFiber"
 import { beginWork } from "./ReactFiberBeginWork"
+import { FiberFlags } from '@/shared/constants'
 
 let workInProgress: Fiber | null = null
 
@@ -70,12 +71,51 @@ function performUnitOfWork(unitOfWork: Fiber) {
     // , lanes
   )
 
-  // TODO: 处理memoizedProps
+  // 处理memoizedProps
+  // TODO memoizedProps的作用
+  unitOfWork.memoizedProps = unitOfWork.pendingProps
+  // 当next不存在时，也就是说当前这棵树所有的节点对应的fiber都已经完成了初始化
   if(!next) {
     // TODO: completeUnitOfWork(unitOfWork)
+    // 根据当前节点的类型，实现创建、更新真实 DOM 的功能（DOM 创建完成后存储在内存中并未挂载到 container)
+    // 在beginWork的阶段，fiber中已经标志好了需要操作DOM相关的Effect
+    completeUnitOfWork(unitOfWork)
   }else {
     workInProgress = next
   }
 
   // ReactCurrentOwner.current = null
+}
+
+
+function completeUnitOfWork(unitOfWork: Fiber) {
+  // Attempt to(尝试) complete the current unit of work, then move to the next
+  // sibling. If there are no more siblings, return to the parent fiber.
+
+  let completedWork = unitOfWork
+
+  do {
+    const current = completedWork.alternate
+    const returnFiber = completedWork.return
+
+    // 检查work已完成
+    if((completedWork.flags & FiberFlags.Incomplete) === FiberFlags.NoFlags) {
+      // 这里将next切换到了兄弟节点
+      let next = completeWork(completedWork)
+
+      if(next !== null) {
+        workInProgress = next
+        return
+      }
+
+      // TODO resetChildLanes()
+      // TODO deal with effects ...
+
+    }else {
+      // TODO: 因为something threw导致没有真正完成
+    }
+
+
+  } while(completedWork !== null)
+
 }

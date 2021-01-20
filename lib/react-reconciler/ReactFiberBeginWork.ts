@@ -1,4 +1,4 @@
-import { WorkTag } from "@/shared/constants";
+import { FiberFlags, WorkTag } from "@/shared/constants";
 import { reconcileChildFibers } from "./ReactChildFiber";
 import Fiber from "./ReactFiber";
 import { processUpdateQueue } from "./ReactUpdateQueue";
@@ -61,13 +61,24 @@ function updateHostComponent(
   workInProgress: Fiber, 
   // lanes
 ) {
+
   const nextProps = workInProgress.pendingProps
+  const type = workInProgress.type
+
   // 注意：这里获取nextChildren的方式和之前写过的updateHostRoot的处理方式不同
   let nextChildren = nextProps.children
+  const prevProps = current !== null ? current.memoizedState : null
 
-  const isDirectTextChild = shouldSetTextContent(workInProgress.type, nextProps)
+  const isDirectTextChild = shouldSetTextContent(type, nextProps)
+  if(isDirectTextChild) {
+    nextChildren = null
+  }else if(prevProps !== null && shouldSetTextContent(type, prevProps)) {
+    workInProgress.flags |= FiberFlags.ContentReset
+  }
   
-  
+  // TODO：markRef
+  reconcileChildren(current, workInProgress, nextChildren)
+  return workInProgress.child
 }
 
 
@@ -97,7 +108,10 @@ export function reconcileChildren(
 }
 
 
-function shouldSetTextContent(type: string, props: any ) {
+function shouldSetTextContent(type: string | null, props: any ) {
+  if(type === null) 
+    return true
+
   return (
     type === 'textarea' ||
     type === 'option' ||

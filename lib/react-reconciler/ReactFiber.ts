@@ -32,6 +32,7 @@ export default class Fiber {
   return: Fiber | null = null
 
   pendingProps: any
+  memoizedProps: any
 
   constructor(tag: WorkTag, pendingProps: any, key: null | string) {
     this.tag = tag
