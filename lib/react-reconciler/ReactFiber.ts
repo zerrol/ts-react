@@ -1,3 +1,4 @@
+import { Instance } from '@/react-dom/ReactDOMComponent'
 import { FiberFlags, RootTag, WorkTag } from '@/shared/constants'
 import { ReactElement, ReactEmpty } from '@/shared/interface'
 import FiberRoot from './FiberRoot'
@@ -20,7 +21,7 @@ export default class Fiber {
   // 副作用flag，用来标志fiber reconcile完成后，渲染到Dom上时应该做什么处理的标志
   flags: FiberFlags = FiberFlags.NoFlags
 
-  stateNode?: FiberRoot
+  stateNode?: FiberRoot | Instance
 
   updateQueue: UpdateQueue<any> | null = null
 
@@ -29,6 +30,7 @@ export default class Fiber {
   // Fiber
   alternate: Fiber | null = null 
   child: Fiber | null = null
+  sibling: Fiber | null = null
   return: Fiber | null = null
 
   pendingProps: any

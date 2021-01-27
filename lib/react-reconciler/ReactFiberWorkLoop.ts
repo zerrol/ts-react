@@ -1,7 +1,8 @@
 import FiberRoot from "./FiberRoot"
 import Fiber, { createWorkInProgress } from "./ReactFiber"
 import { beginWork } from "./ReactFiberBeginWork"
-import { FiberFlags } from '@/shared/constants'
+import { FiberFlags } from "@/shared/constants"
+import { completeWork } from "./ReactFiberCompleteWork"
 
 let workInProgress: Fiber | null = null
 
@@ -12,7 +13,7 @@ export function scheduleUpdateOnFiber(
 ) {
   // TODO ... losts of code detail with lane
 
-  const root = fiber.stateNode
+  const root = fiber.stateNode as FiberRoot
 
   if (!root) throw new Error("can't schedule update on unmount root")
 
@@ -66,7 +67,7 @@ function performUnitOfWork(unitOfWork: Fiber) {
 
   // TODO: profilerTimer判断
   let next = beginWork(
-    current, 
+    current,
     unitOfWork
     // , lanes
   )
@@ -75,47 +76,66 @@ function performUnitOfWork(unitOfWork: Fiber) {
   // TODO memoizedProps的作用
   unitOfWork.memoizedProps = unitOfWork.pendingProps
   // 当next不存在时，也就是说当前这棵树所有的节点对应的fiber都已经完成了初始化
-  if(!next) {
+  if (!next) {
     // TODO: completeUnitOfWork(unitOfWork)
     // 根据当前节点的类型，实现创建、更新真实 DOM 的功能（DOM 创建完成后存储在内存中并未挂载到 container)
     // 在beginWork的阶段，fiber中已经标志好了需要操作DOM相关的Effect
     completeUnitOfWork(unitOfWork)
-  }else {
+  } else {
     workInProgress = next
   }
 
   // ReactCurrentOwner.current = null
 }
 
-
 function completeUnitOfWork(unitOfWork: Fiber) {
   // Attempt to(尝试) complete the current unit of work, then move to the next
   // sibling. If there are no more siblings, return to the parent fiber.
 
-  let completedWork = unitOfWork
+  let completedWork: Fiber | null = unitOfWork
 
   do {
     const current = completedWork.alternate
     const returnFiber = completedWork.return
 
     // 检查work已完成
-    if((completedWork.flags & FiberFlags.Incomplete) === FiberFlags.NoFlags) {
-      // 这里将next切换到了兄弟节点
-      let next = completeWork(completedWork)
+    if ((completedWork.flags & FiberFlags.Incomplete) === FiberFlags.NoFlags) {
+      // 这里返回的next大部分情况为null，真正指向兄弟节点的是下面
+      let next = completeWork(current, completedWork)
 
-      if(next !== null) {
+      if (next !== null) {
         workInProgress = next
         return
       }
 
       // TODO resetChildLanes()
-      // TODO deal with effects ...
 
-    }else {
+      if (
+        returnFiber !== null &&
+        // Do not append effects to parents if a sibling failed to complete
+        (returnFiber.flags & FiberFlags.Incomplete) === FiberFlags.NoFlags
+      ) {
+        // TODO deal with effects ...
+      }
+    } else {
       // TODO: 因为something threw导致没有真正完成
     }
 
+    // 将complete指向兄弟节点
+    const siblingFiber = completedWork.sibling
+    if (siblingFiber !== null) {
+      // If there is more work to do in this returnFiber, do that next.
+      workInProgress = siblingFiber
+      return
+    }
 
-  } while(completedWork !== null)
+    // Otherwise,return to the parent
+    completedWork = returnFiber
+    workInProgress = completedWork
+  } while (completedWork !== null)
 
+  // We've reached(达成) the root.
+  // if (workInProgressRootExitStatus === RootIncomplete) {
+  //   workInProgressRootExitStatus = RootCompleted;
+  // }
 }

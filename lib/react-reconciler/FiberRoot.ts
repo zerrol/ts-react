@@ -19,6 +19,8 @@ export default class FiberRoot {
   tag: RootTag
   
   current: Fiber
+
+  pendingChildren: any[] | null = null
   
   // 已经结束的workInProgress的HostRoot, 准备被commit
   finishedWork: Fiber | null = null
