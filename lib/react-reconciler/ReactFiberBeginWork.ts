@@ -1,5 +1,5 @@
 import { FiberFlags, WorkTag } from "@/shared/constants";
-import { reconcileChildFibers } from "./ReactChildFiber";
+import { mountChildFibers, reconcileChildFibers } from "./ReactChildFiber";
 import Fiber from "./ReactFiber";
 import { processUpdateQueue } from "./ReactUpdateQueue";
 
@@ -95,6 +95,12 @@ export function reconcileChildren(
 
   if(current === null) {
     // TODO: mount child fibers
+    mountChildFibers(
+      workInProgress, 
+      null, 
+      nextChildren, 
+      // renderLanes
+    )
     return
   }
 

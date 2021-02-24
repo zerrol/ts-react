@@ -28,8 +28,7 @@ export function finalizeInitialChildren(
   // rootContainerInstance: Container,
   // hostContext: HostContext,
 ) {
-   
-
+  setInitialProperties(domElement, type, props)
 }
 
 
@@ -38,12 +37,10 @@ function setInitialProperties(
   type: string,
   props: any
 ) {
-  // TODO 一些自定义的事件
-
+  // TODO 处理一些自定义的事件
   setInitialDOMProperties()
-
 }
 
 function setInitialDOMProperties() {
-
+  // 设置DOM的原生属性
 }

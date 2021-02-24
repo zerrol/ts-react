@@ -48,7 +48,7 @@ function renderRootSync(root: FiberRoot) {
 
   while (workInProgress !== null) {
     // 总结来说, performUnitOfWork，就是分成两步，
-    // 第一步 beginWork 开始工作阶段，会创建或者更新Fiber节点，已经标志Effect
+    // 第一步 beginWork 开始工作阶段，会创建或者更新Fiber节点，以及标志Effect
     // 第二步completeWork 将Fiber更新到实体DOM
 
     // 对于整个workLoop来说，其实就是在遍历Fiber树
@@ -66,6 +66,8 @@ function performUnitOfWork(unitOfWork: Fiber) {
   const current = unitOfWork.alternate
 
   // TODO: profilerTimer判断
+  // 以current为根节点，对这颗子树进行初始化
+  // 初始化的内容主要是生成（更新）子树每一个节点的fiber，并且标志effect
   let next = beginWork(
     current,
     unitOfWork
@@ -75,10 +77,11 @@ function performUnitOfWork(unitOfWork: Fiber) {
   // 处理memoizedProps
   // TODO memoizedProps的作用
   unitOfWork.memoizedProps = unitOfWork.pendingProps
-  // 当next不存在时，也就是说当前这棵树所有的节点对应的fiber都已经完成了初始化
+  // 当next不存在时，也就是说当前这棵子树所有的节点对应的fiber都已经完成了初始化
+  // 剩余的兄弟树会在completeUnitOfWork的时候重新回到递归中，进行beginWork初始化
   if (!next) {
     // TODO: completeUnitOfWork(unitOfWork)
-    // 根据当前节点的类型，实现创建、更新真实 DOM 的功能（DOM 创建完成后存储在内存中并未挂载到 container)
+    // 根据当前节点的类型，实现创建、更新真实 DOM （DOM 创建完成后存储在内存中并未挂载到 container)
     // 在beginWork的阶段，fiber中已经标志好了需要操作DOM相关的Effect
     completeUnitOfWork(unitOfWork)
   } else {
@@ -119,6 +122,9 @@ function completeUnitOfWork(unitOfWork: Fiber) {
       }
     } else {
       // TODO: 因为something threw导致没有真正完成
+      // This fiber did not complete because something threw. Pop values off
+      // the stack without entering the complete phase. If this is a boundary,
+      // capture values if possible.
     }
 
     // 将complete指向兄弟节点

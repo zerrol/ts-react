@@ -1,4 +1,4 @@
-import { Instance } from "@/react-dom/ReactDOMComponent"
+import { finalizeInitialChildren, Instance } from "@/react-dom/ReactDOMComponent"
 import { appendInitialChild, createInstance } from "@/react-dom/ReactDOMHostConfig"
 import { FiberFlags, WorkTag } from "@/shared/constants"
 import FiberRoot from "./FiberRoot"
@@ -56,8 +56,10 @@ export function completeWork(
 
       workInProgress.stateNode = instance
 
-      // TODO: finalizeInitialChildren... 这里会为element加上attribute
-      // markRef
+      // 完成初始化，主要是为element加上attribute
+      // 这里会为element加上attribute
+      finalizeInitialChildren( instance, type, newProps )
+      // TODO: 处理markRef...
       return null
     }
   }
