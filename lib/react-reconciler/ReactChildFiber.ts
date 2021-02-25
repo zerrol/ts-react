@@ -1,7 +1,7 @@
-import { FiberFlags } from "@/shared/constants"
+import { FiberFlags, WorkTag } from "@/shared/constants"
 import { ReactElement } from "@/shared/interface"
 import { REACT_ELEMENT_TYPE } from "@/shared/symbols"
-import Fiber, { createFiberFromElement } from "./ReactFiber"
+import Fiber, { createFiberFromElement, createFiberFromText } from "./ReactFiber"
 
 export const reconcileChildFibers = ChildReconciler(true)
 export const mountChildFibers = ChildReconciler(false)
@@ -40,6 +40,31 @@ function ChildReconciler(shouldTrackSideEffects: boolean) {
     return created
   }
 
+  function reconcilerSingleTextNode (
+    returnFiber: Fiber,
+    currentFirstChild: Fiber | null,
+    textContent: string,
+    // lanes
+  ) {
+    if(currentFirstChild !== null && currentFirstChild.tag === WorkTag.HostText) {
+      // TODO: 处理更新text的情况
+      console.warn('HostText node already exists, there is not code for deal with')
+      return currentFirstChild
+    }
+
+    // The existing first child is not a text node so we need to create one
+    // and delete the existing ones.
+    // TODO: deleteRemainingChildren
+
+    const created = createFiberFromText(
+      textContent 
+      // returnFiber.mode, 
+      // lanes
+    )
+    created.return = returnFiber
+    return created
+  }
+
   function reconcileChildFibers(
     returnFiber: Fiber,
     currentFirstChild: Fiber | null,
@@ -56,6 +81,20 @@ function ChildReconciler(shouldTrackSideEffects: boolean) {
         // ...other case
       }
 
+    }
+
+    // 一开始以为如果是text节点例如 <div>hello</div>
+    // 会进入到这里，但是其实在上层updateHostComponent的时候
+    // newChild不会传入"hello"，而是会传入null, 所以这里不会触发。
+    // "hello"会在complete阶段从pendingProps中再去获取
+    if(typeof newChild === 'string' || typeof newChild === 'number') {
+      return placeSingleChild(
+        reconcilerSingleTextNode(
+          returnFiber,
+          currentFirstChild,
+          "" + newChild,
+        )
+      )
     }
 
     return null

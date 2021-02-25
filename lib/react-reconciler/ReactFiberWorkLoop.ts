@@ -34,8 +34,8 @@ function performSyncWorkOnRoot(root: FiberRoot) {
   const finishedWork = root.current.alternate
   root.finishedWork = finishedWork
 
-  // commit
-  // commitRoot(root)
+  // TODO: commitRoot(root)
+  // commitRoot 会将生成好的dom节点更新到root节点上
 
   // ensureRootIsScheduled()
   return null

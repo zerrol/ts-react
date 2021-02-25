@@ -20,7 +20,6 @@ export function render(element: ReactElement, container: HTMLElement | null, cal
     throw new Error('can not render on invalid dom node')
 
   return legacyRenderSubtreeIntoContainer(null, element, container)
-
 }
 
 /**

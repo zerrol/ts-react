@@ -1,127 +1,67 @@
-class ElementWrapper {
-  root: HTMLElement
+import { REACT_ELEMENT_TYPE } from "@/shared/symbols"
 
-  constructor(type: string) {
-    this.root = document.createElement(type)
-  }
-  
-  appendChild(child: ElementWrapper | TextWrapper) {
-    this.root.appendChild(child.root)
-  }
+/**
+ *
+ * @param type div之类的
+ * @param config 主要是props
+ * @param children
+ */
+export function createElement(type: string, config: any, children: any) {
+  let propName: string
 
-  setAttribute(attributes: any) {
-    // 处理元素的属性
-    for (const key in attributes) {
-      if (!attributes.hasOwnProperty(key)) continue
-      const attr = attributes[key]
+  const props: any = {}
 
-      // 处理style
-      if (key === "style") {
-        for (const styleKey in attr) {
-          if (attr.hasOwnProperty(styleKey)) {
-            this.root.setAttribute(key, `${styleKey}: ${attr[styleKey]}`)
-          }
-        }
+  let key = null
+  let ref = null
+  // self 和 source 主要是用于dev环境调试用
+  // let self = null
+  // let source = null
 
-        continue
-      }
+  if (config !== null) {
+    // TODO: 处理 key 和 ref
+    // if (hasValidRef(config)) {
+    //   ref = config.ref;
 
-      // 事件绑定
-      if (key === 'onClick') {
-        this.root.addEventListener('click', attr)
-      }
+    //   if (__DEV__) {
+    //     warnIfStringRefCannotBeAutoConverted(config);
+    //   }
+    // }
+    // if (hasValidKey(config)) {
+    //   key = '' + config.key;
+    // }
 
-      // 属性赋值
-      // Attr
-      this.root.setAttribute(key, attributes[key].value)
-    }
-  }
-}
-
-class TextWrapper {
-  root: Text
-
-  constructor(text: string | number) {
-    this.root = document.createTextNode(text.toString())
-  }
-}
-
-export abstract class Component<P = any, S = any> {
-  state?: S
-
-  _root?: HTMLElement
-  props: P
-  children: any[]
-
-  abstract render(): ElementWrapper | Component<P, S>
-
-  constructor(props: P) {
-    this.props = props || Object.create(null)
-    this.children = []
-  }
-
-  setState(newState: S) {
-    this.state = newState
-    this.update()
-  }
-
-  setAttribute(props) {
-    // this.props[key] = value
-    this.props = props
-  }
-
-  appendChild(child) {
-    // 在children push之前不能访问root
-    // 如果访问root，会导致节点被生成，而此时children还不存在
-
-    this.children.push(child)
-  }
-
-  update() {
-    const root = this.root
-    const parent = root.parentNode
-    this._root = undefined
-    parent?.removeChild(root)
-    parent?.appendChild(this.root)
-  }
-
-  get root(): HTMLElement {
-    if(!this._root) {
-      this._root = this.render().root
-    }
-    return this._root
-  }
-}
-
-export function createElement(type: any, attributes: NamedNodeMap, ...children) {
-  let element: Component | ElementWrapper
-
-  if (typeof type === "string") {
-    element = new ElementWrapper(type)
-  }else {
-    element = new type()
-  }
-  element.setAttribute(attributes)
-
-  const insertChildren = (_children) => {
-    for(let child of _children) {
-      let childElement = child
-      if (typeof child === "string" || typeof child === "number") {
-        childElement = new TextWrapper(child)
-      }
-
-      if(child instanceof Array) {
-        insertChildren(child)
-      }else {
-        element.appendChild(childElement)
+    // TODO：处理 key 和 self
+    for (propName in config) {
+      if (Object.prototype.hasOwnProperty.call(config, propName)) {
+        props[propName] = config[propName]
       }
     }
   }
 
-  insertChildren(children)
+  // Children can be more than one argument, and those are transferred onto
+  // the newly allocated props object.
+  const childrenLength = arguments.length - 2
+  if (childrenLength === 1) {
+    props.children = children
+  } else if (childrenLength > 1) {
+    const childArray = Array(childrenLength)
+    for (let i = 0; i < childrenLength; i++) {
+      childArray[i] = arguments[i + 2]
+    }
 
-  console.log('createElement return', element)
-  return element
+    props.children = childArray
+  }
+
+  // TODO 处理 defaultProps
+
+  return {
+    $$typeof: REACT_ELEMENT_TYPE,
+    type,
+    key,
+    ref,
+    props,
+    // _owner:  ReactCurrentOwner.current
+  }
 }
 
 export default {

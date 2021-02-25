@@ -6,7 +6,11 @@ import { UpdateQueue } from './interface'
 
 export default class Fiber {
 
-  static create(tag: WorkTag, pendingProps: any, key: null | string) {
+  static create(
+    tag: WorkTag, 
+    pendingProps: any, 
+    key: null | string
+  ) {
     return new Fiber(tag, pendingProps, key)
   }
 
@@ -62,12 +66,24 @@ export function createWorkInProgress(current: Fiber, pendingProps: any) {
     workInProgress.stateNode = current.stateNode
 
     // ... initailize other property
-
+    workInProgress.type = current.type
     workInProgress.alternate = current
     current.alternate = workInProgress
   }else {
     workInProgress.pendingProps = pendingProps
+    // Needed because Blocks store data on type.
+    workInProgress.type = current.type;
+    // We already have an alternate.
+    // Reset the effect tag.
+    workInProgress.flags = FiberFlags.NoFlags
   }
+
+  workInProgress.child = current.child
+  workInProgress.memoizedState = current.memoizedState
+  workInProgress.memoizedProps = current.memoizedProps
+  workInProgress.updateQueue = current.updateQueue
+
+  workInProgress.sibling = current.sibling
 
   // ... initailize other property
   return workInProgress
@@ -98,5 +114,15 @@ export function createFiberFromElement(
   const fiber = Fiber.create(fiberTag, element.props, element.key) 
   fiber.type = element.type
 
+  return fiber
+}
+
+export function createFiberFromText(
+  content: string,
+  // mode: TypeOfMode,
+  // lanes: Lanes,
+): Fiber {
+  const fiber = Fiber.create(WorkTag.HostText, content, null)
+  // fiber.lanes = lanes;
   return fiber
 }
