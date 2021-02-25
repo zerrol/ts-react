@@ -1,10 +1,31 @@
 import FiberRoot from "./FiberRoot"
 import Fiber, { createWorkInProgress } from "./ReactFiber"
 import { beginWork } from "./ReactFiberBeginWork"
-import { FiberFlags } from "@/shared/constants"
+import { FiberFlags, WorkTag } from "@/shared/constants"
 import { completeWork } from "./ReactFiberCompleteWork"
+import { commitPlacement } from "./ReactFiberCommitWork"
+
+const {
+  NoFlags,
+  PerformedWork,
+  Placement,
+  Update,
+  PlacementAndUpdate,
+  Deletion,
+  // Ref,
+  ContentReset,
+  // Snapshot,
+  // Callback,
+  // Passive,
+  // PassiveUnmountPendingDev,
+  Incomplete,
+  // HostEffectMask,
+  // Hydrating,
+  // HydratingAndUpdate,
+} = FiberFlags;
 
 let workInProgress: Fiber | null = null
+let nextEffect: Fiber | null = null
 
 export function scheduleUpdateOnFiber(
   fiber: Fiber
@@ -34,7 +55,7 @@ function performSyncWorkOnRoot(root: FiberRoot) {
   const finishedWork = root.current.alternate
   root.finishedWork = finishedWork
 
-  // TODO: commitRoot(root)
+  commitRoot(root)
   // commitRoot 会将生成好的dom节点更新到root节点上
 
   // ensureRootIsScheduled()
@@ -144,4 +165,84 @@ function completeUnitOfWork(unitOfWork: Fiber) {
   // if (workInProgressRootExitStatus === RootIncomplete) {
   //   workInProgressRootExitStatus = RootCompleted;
   // }
+}
+
+function commitRoot(root: FiberRoot) {
+  // TODO: 引入优先级处理
+  // const renderPriorityLevel = getCurrentPriorityLevel();
+  // runWithPriority(
+  //   ImmediateSchedulerPriority,
+  //   commitRootImpl.bind(null, root, renderPriorityLevel),
+  // );
+  commitRootImpl(root)
+  return null
+}
+
+function commitRootImpl(
+  root: FiberRoot,
+  // renderPriorityLevel
+) {
+  const finishedWork = root.finishedWork
+  if(finishedWork === null)  {
+    return null
+  }
+
+  // root.finishedLanes = NoLanes
+
+  // commitRoot never returns a continuation; it always finishes synchronously.
+  // So we can clear these now to allow a new callback to be scheduled.
+  // TODO: root.callbackNode = null
+
+  // Update the first and last pending times on this root. The new first
+  // pending time is whatever is left on the root fiber.
+  // let remainingLanes = mergeLanes(finishedWork.lanes, finishedWork.childLanes);
+  // TODO: markRootFinished(root, remainingLanes);
+
+
+  // if(root === workInProgressRoot) {
+  //   workInProgressRoot = null;
+    workInProgress = null;
+  //   workInProgressRootRenderLanes = NoLanes
+  // }
+
+
+  // TODO： 处理Effects
+  // ...
+  // let firstEffect
+  // if(finishedWork.flags > FiberFlags.PerformedWork) {
+  //  code...
+  // }else {
+  //   firstEffect = finishedWork.firstEffect
+  // }
+
+  // 初次render执行这个
+  commitMutationEffects(root)
+}
+
+function commitMutationEffects(
+  root: FiberRoot,
+  // renderPriorityLeve
+) {
+  // TODO: 完善nextEffect处理的逻辑
+  // 目前简单来说，nextEffect先是root的第一个子节点fiber
+  let nextEffect = root.finishedWork?.child
+
+  // TODO: 循环处理nextEffect
+  if(!nextEffect) return
+
+  const flags = nextEffect.flags
+
+  const primaryFlags = flags & (Placement | Update | Deletion)
+  switch (primaryFlags) {
+    case Placement: {
+      commitPlacement(nextEffect);
+      // Clear the "placement" from effect tag so that we know that this is
+      // inserted, before any life-cycles like componentDidMount gets called.
+      // TODO: findDOMNode doesn't rely on this any more but isMounted does
+      // and isMounted is deprecated anyway so we should be able to kill this.
+      nextEffect.flags &= ~Placement;
+      break;
+    }
+    // TODO: other case
+  }
 }
