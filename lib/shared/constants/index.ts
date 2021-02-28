@@ -1,7 +1,13 @@
 export * from './FiberFlags'
 
 export enum WorkTag {
-  FunctionComponent, ClassComponent, IndeterminateComponent, HostRoot, HostComponent, HostText
+  FunctionComponent,
+  ClassComponent,
+  IndeterminateComponent, 
+  HostRoot, 
+  HostComponent, 
+  HostText,
+  HostPortal
 }
 
 export enum RootTag {

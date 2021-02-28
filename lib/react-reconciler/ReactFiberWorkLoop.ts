@@ -25,6 +25,9 @@ const {
 } = FiberFlags;
 
 let workInProgress: Fiber | null = null
+
+// 用来递归进行commit的变量
+// 意思是下一个需要进行commit的fiber
 let nextEffect: Fiber | null = null
 
 export function scheduleUpdateOnFiber(
@@ -139,7 +142,34 @@ function completeUnitOfWork(unitOfWork: Fiber) {
         // Do not append effects to parents if a sibling failed to complete
         (returnFiber.flags & FiberFlags.Incomplete) === FiberFlags.NoFlags
       ) {
-        // TODO deal with effects ...
+        //  deal with effects
+        // 将所有被标记了flags的子节点，传成一个链表
+        // 作用是为了在commit阶段，方便遍历有标志的节点完成真实dom的根节点上的更新、插入或者删除
+        if (returnFiber.firstEffect === null) {
+          returnFiber.firstEffect = completedWork.firstEffect
+        }
+        if (completedWork.lastEffect !== null) {
+          if (returnFiber.lastEffect !== null) {
+            returnFiber.lastEffect.nextEffect = completedWork.firstEffect
+          }
+          returnFiber.lastEffect = completedWork.lastEffect
+        }
+
+        const flags = completedWork.flags
+
+        // Skip both NoWork and PerformedWork tags when creating the effect
+        // list. PerformedWork 这个类型的flgas是不需要被提交的
+        if (flags > PerformedWork) {
+          // 如果节点被标记了flags
+          // 将节点自己插入到链表的末尾
+          if (returnFiber.lastEffect !== null) {
+            returnFiber.lastEffect.nextEffect = completedWork
+          } else {
+            returnFiber.firstEffect = completedWork
+          }
+
+          returnFiber.lastEffect = completedWork
+        }
       }
     } else {
       // TODO: 因为something threw导致没有真正完成
@@ -182,67 +212,112 @@ function commitRootImpl(
   root: FiberRoot,
   // renderPriorityLevel
 ) {
+
+  // TODO 循环触发useEffect 
+  // while {...flushPassiveEffect()}
+
   const finishedWork = root.finishedWork
-  if(finishedWork === null)  {
+  if (finishedWork === null) {
     return null
   }
 
   // root.finishedLanes = NoLanes
 
-  // commitRoot never returns a continuation; it always finishes synchronously.
-  // So we can clear these now to allow a new callback to be scheduled.
-  // TODO: root.callbackNode = null
-
-  // Update the first and last pending times on this root. The new first
-  // pending time is whatever is left on the root fiber.
-  // let remainingLanes = mergeLanes(finishedWork.lanes, finishedWork.childLanes);
-  // TODO: markRootFinished(root, remainingLanes);
-
-
   // if(root === workInProgressRoot) {
   //   workInProgressRoot = null;
-    workInProgress = null;
+  workInProgress = null;
   //   workInProgressRootRenderLanes = NoLanes
   // }
 
+  let firstEffect: Fiber | null
+  if (finishedWork.flags > PerformedWork) {
+    // finishedWork 自己也被标记了flags
+    // 但此时其实他还没有被加入到effects链表中
+    // 因为在complete阶段，只会将root节点的children加入到链表中。
+    // 所以我们需要在此处将它加入到链表末尾。
+    if (finishedWork.lastEffect !== null) {
+      finishedWork.lastEffect.nextEffect = finishedWork
+      firstEffect = finishedWork.firstEffect
+    } else {
+      firstEffect = finishedWork
+    }
 
-  // TODO： 处理Effects
-  // ...
-  // let firstEffect
-  // if(finishedWork.flags > FiberFlags.PerformedWork) {
-  //  code...
-  // }else {
-  //   firstEffect = finishedWork.firstEffect
-  // }
+  } else {
+    firstEffect = finishedWork.firstEffect
+  }
 
-  // 初次render执行这个
-  commitMutationEffects(root)
+  if (firstEffect !== null) {
+    // TODO: 优先级处理
+
+    nextEffect = firstEffect
+
+    // TODO: 递归进行commitBeforeMutationEffects
+    // 这是 commit 阶段的第一个关键子阶段 
+    // while(nextEffect !== null) { ...commitBeforeMutationEffects() }
+
+    // 在commitBeforeMutationEffects之后，nextEffect已经变化了，需要重置
+    // 下面进行第二个关键子阶段，commitMutationEffects阶段
+    // 这个阶段会将节点实际插入、更新或者删除在页面的dom上
+    nextEffect = firstEffect
+
+    do {
+      try {
+        commitMutationEffects(root)
+      } catch (error) {
+        console.error(error)
+        // TODO: deal with error
+        nextEffect = nextEffect?.nextEffect
+      }
+    } while (nextEffect !== null)
+
+    // 是时候将finishedWork置为current了
+    root.current = finishedWork
+
+    // 在commitMutationEffects之后，nextEffect已经变化了，需要重置
+    // 下面进行第3个关键子阶段，commitLayoutEffects阶段
+    // nextEffect = firstEffect
+    // while(nextEffect !== null) { ...commiteLayoutEffects() }
+
+    nextEffect = null
+  } else {
+    // No effects
+    root.current = finishedWork
+  }
+
+  // TODO: clear passvie effects
+
+  // TODO: clean remain lanes
+
+  // TODO: 确保root已经schedule完成
+  // ensureRootIsScheduled()
+
+  return null
 }
 
 function commitMutationEffects(
   root: FiberRoot,
   // renderPriorityLeve
 ) {
-  // TODO: 完善nextEffect处理的逻辑
   // 目前简单来说，nextEffect先是root的第一个子节点fiber
-  let nextEffect = root.finishedWork?.child
 
-  // TODO: 循环处理nextEffect
-  if(!nextEffect) return
+  while (nextEffect !== null) {
+    const flags = nextEffect.flags
+    // TODO: resetText
+    // TODO: ref
 
-  const flags = nextEffect.flags
-
-  const primaryFlags = flags & (Placement | Update | Deletion)
-  switch (primaryFlags) {
-    case Placement: {
-      commitPlacement(nextEffect);
-      // Clear the "placement" from effect tag so that we know that this is
-      // inserted, before any life-cycles like componentDidMount gets called.
-      // TODO: findDOMNode doesn't rely on this any more but isMounted does
-      // and isMounted is deprecated anyway so we should be able to kill this.
-      nextEffect.flags &= ~Placement;
-      break;
+    const primaryFlags = flags & (Placement | Update | Deletion)
+    switch (primaryFlags) {
+      case Placement: {
+        commitPlacement(nextEffect);
+        // Clear the "placement" from effect tag so that we know that this is
+        // inserted, before any life-cycles like componentDidMount gets called.
+        // TODO: findDOMNode doesn't rely on this any more but isMounted does
+        // and isMounted is deprecated anyway so we should be able to kill this.
+        nextEffect.flags &= ~Placement;
+        break;
+      }
     }
-    // TODO: other case
+
+    nextEffect = nextEffect.nextEffect
   }
 }

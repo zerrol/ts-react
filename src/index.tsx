@@ -1,4 +1,19 @@
 import React from '../lib/react/index'
 import { render } from '../lib/react-dom/index'
 
-render(<h1>hello react</h1>, document.getElementById('root'))
+render(
+  <div>
+    <div>
+      <span>hello</span>
+      <span>span</span>
+    </div>
+    <hr/>
+    <h1>
+      <div>
+        <div>
+          原生元素已完成
+        </div>
+      </div>
+    </h1>
+  </div>
+, document.getElementById('root'))

@@ -4,7 +4,7 @@ import Fiber from "./ReactFiber";
 import { processUpdateQueue } from "./ReactUpdateQueue";
 
 export function beginWork(
-  current: Fiber | null, 
+  current: Fiber | null,
   workInProgress: Fiber,
   // lanes
 ) {
@@ -12,15 +12,15 @@ export function beginWork(
 
   // 初次render时，root的current已经存在为rootFiber
   // 其他在初次render时，为null
-  if(current !== null) {
+  if (current !== null) {
     // TODO: 处理 props，判断是否可复用Fiber
   }
 
-  switch(workInProgress.tag) {
+  switch (workInProgress.tag) {
     case WorkTag.HostRoot:
       return updateHostRoot(current, workInProgress)
     case WorkTag.HostComponent:
-      return updateHostComponent(current, workInProgress)  
+      return updateHostComponent(current, workInProgress)
   }
 
 }
@@ -57,8 +57,8 @@ function updateHostRoot(
  * @param workInProgress 
  */
 function updateHostComponent(
-  current: Fiber | null, 
-  workInProgress: Fiber, 
+  current: Fiber | null,
+  workInProgress: Fiber,
   // lanes
 ) {
 
@@ -70,12 +70,12 @@ function updateHostComponent(
   const prevProps = current !== null ? current.memoizedState : null
 
   const isDirectTextChild = shouldSetTextContent(type, nextProps)
-  if(isDirectTextChild) {
+  if (isDirectTextChild) {
     nextChildren = null
-  }else if(prevProps !== null && shouldSetTextContent(type, prevProps)) {
+  } else if (prevProps !== null && shouldSetTextContent(type, prevProps)) {
     workInProgress.flags |= FiberFlags.ContentReset
   }
-  
+
   // TODO：markRef
   reconcileChildren(current, workInProgress, nextChildren)
   return workInProgress.child
@@ -93,29 +93,30 @@ export function reconcileChildren(
   // lanes
 ) {
 
-  if(current === null) {
+  if (current === null) {
     // TODO: mount child fibers
-    mountChildFibers(
-      workInProgress, 
-      null, 
-      nextChildren, 
+    workInProgress.child = mountChildFibers(
+      workInProgress,
+      null,
+      nextChildren,
       // renderLanes
     )
-    return
+  } else {
+
+    // 初次渲染时，root节点执行此处
+    workInProgress.child = reconcileChildFibers(
+      workInProgress,
+      current.child,
+      nextChildren,
+      // lanes
+    )
   }
 
-  // 初次渲染时，root节点执行此处
-  workInProgress.child = reconcileChildFibers(
-    workInProgress, 
-    current.child,
-    nextChildren,
-    // lanes
-  ) 
 }
 
 
-function shouldSetTextContent(type: string | null, props: any ) {
-  if(type === null) 
+function shouldSetTextContent(type: string | null, props: any) {
+  if (type === null)
     return true
 
   return (

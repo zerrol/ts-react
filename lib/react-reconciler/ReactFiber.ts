@@ -22,9 +22,6 @@ export default class Fiber {
   // 表示Fiber的类型，function/class/div/span等标签名
   type: string | null = null
 
-  // 副作用flag，用来标志fiber reconcile完成后，渲染到Dom上时应该做什么处理的标志
-  flags: FiberFlags = FiberFlags.NoFlags
-
   stateNode?: FiberRoot | Instance
 
   updateQueue: UpdateQueue<any> | null = null
@@ -39,6 +36,16 @@ export default class Fiber {
 
   pendingProps: any
   memoizedProps: any
+
+  // 副作用flag，用来标志fiber reconcile完成后，渲染到Dom上时应该做什么处理的标志
+  flags: FiberFlags = FiberFlags.NoFlags
+
+  // effects，自己子树中被标记了flags的节点组成的单向链表
+  // 生成与complete阶段：complete()结束后
+  // 作用是为了在commit阶段，可以直接通过遍历单链表完成递归，而不用再遍历树
+  firstEffect: Fiber | null = null
+  nextEffect: Fiber | null = null 
+  lastEffect: Fiber | null = null
 
   constructor(tag: WorkTag, pendingProps: any, key: null | string) {
     this.tag = tag

@@ -48,12 +48,14 @@ function setInitialDOMProperties(
       continue
     }
     const nextProp = nextProps[propKey]
-    
+
     // TODO: if(propKey === 'style') 
-    if(propKey === 'children') {
-      const canSetTextContent = tag !== 'textarea' || nextProp !== ''
-      if(canSetTextContent) {
-        setTextContent(domElement, nextProp)
+    if (propKey === 'children') {
+      if (typeof nextProp === 'string') {
+        const canSetTextContent = tag !== 'textarea' || nextProp !== ''
+        if (canSetTextContent) {
+          setTextContent(domElement, nextProp)
+        }
       } else if (typeof nextProp === 'number') {
         setTextContent(domElement, '' + nextProp);
       }
