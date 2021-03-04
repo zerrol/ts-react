@@ -1,19 +1,22 @@
-import React from '../lib/react/index'
-import { render } from '../lib/react-dom/index'
+import React from "../lib/react/index"
+import { render } from "../lib/react-dom/index"
 
 render(
   <div>
+    origin Text
+    <span>hello span</span>
     <div>
-      <span>hello</span>
-      <span>span</span>
-    </div>
-    <hr/>
-    <h1>
+      我是可爱的棉花糖
       <div>
-        <div>
-          原生元素已完成
-        </div>
+        hello
+        <span>
+          giao giao2 giao3 giao4
+          <hr />
+        </span>
+        <div>hello</div>
+        aaaa
       </div>
-    </h1>
-  </div>
-, document.getElementById('root'))
+    </div>
+  </div>,
+  document.getElementById("root")
+)

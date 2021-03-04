@@ -8,6 +8,7 @@
  */
 
 import {TEXT_NODE} from '@/shared/constants/HTMLNodeType';
+import { Instance } from '../ReactDOMComponent';
 
 /**
  * Set the textContent property of a node. For text updates, it's faster
@@ -18,7 +19,7 @@ import {TEXT_NODE} from '@/shared/constants/HTMLNodeType';
  * @param {string} text
  * @internal
  */
-const setTextContent = function(node: Element, text: string): void {
+const setTextContent = function(node: Instance, text: string): void {
   if (text) {
     const firstChild = node.firstChild;
 

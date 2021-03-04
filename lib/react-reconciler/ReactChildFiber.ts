@@ -209,15 +209,6 @@ function ChildReconciler(shouldTrackSideEffects: boolean) {
       }
     }
 
-    if (Array.isArray(newChild)) {
-      return reconcileChildrenArray(
-        returnFiber,
-        currentFirstChild,
-        newChild,
-        // lanes,
-      )
-    }
-
     // 一开始以为如果是text节点例如 <div>hello</div>
     // 会进入到这里，但是其实在上层updateHostComponent的时候
     // newChild不会传入"hello"，而是会传入null, 所以这里不会触发。
@@ -232,6 +223,17 @@ function ChildReconciler(shouldTrackSideEffects: boolean) {
       )
     }
 
+    if (Array.isArray(newChild)) {
+      return reconcileChildrenArray(
+        returnFiber,
+        currentFirstChild,
+        newChild,
+        // lanes,
+      )
+    }
+
+
+    console.warn('reconcileChildFibers need implement')
     return null
   }
 

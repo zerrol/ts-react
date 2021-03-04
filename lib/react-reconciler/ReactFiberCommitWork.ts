@@ -1,3 +1,4 @@
+import { Instance } from "@/react-dom/ReactDOMComponent"
 import { appendChildToContainer } from "@/react-dom/ReactDOMHostConfig" 
 import { FiberFlags, WorkTag } from "@/shared/constants" 
 import FiberRoot from "./FiberRoot" 
@@ -20,7 +21,7 @@ export function commitPlacement(finishedWork: Fiber) {
   // 这里一定需要是原生dom，用来在他下面插入这个节点
   const parentFiber = getHostParentFiber(finishedWork)
 
-  let parent: FiberRoot | Element | undefined
+  let parent: FiberRoot | Instance | undefined
   let isContainer: boolean
   const parentStateNode = parentFiber.stateNode
 
@@ -84,11 +85,16 @@ function insertOrAppendPlacementNodeIntoContainer(
   const {tag} = node 
   const isHost = tag === HostComponent || tag === HostText 
   if (isHost) {
-    const stateNode = isHost ? node.stateNode : node.stateNode?.instance 
+    // const stateNode = isHost ? node.stateNode : (node.stateNode as FiberRoot)?.instance 
+    const stateNode = node.stateNode as Instance
     // TODO 处理before
-    // if (before) {
-    //  insertInContainerBefore(parent, stateNode, before) 
-    appendChildToContainer(parent, stateNode) 
+    if (before) {
+      console.warn('insertOrAppendPlacementNodeIntoContainer before need implements')
+      // TODO
+      // insertInContainerBefore(parent, stateNode, before) 
+    } else {
+      appendChildToContainer(parent, stateNode) 
+    }
 
   } else if (tag === HostPortal) {
     // If the insertion itself is a portal, then we don't want to traverse

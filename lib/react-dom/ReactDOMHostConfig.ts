@@ -1,6 +1,6 @@
 import Fiber from "@/react-reconciler/ReactFiber"
 import { COMMENT_NODE } from "@/shared/constants/HTMLNodeType"
-import { createElement, Instance } from "./ReactDOMComponent"
+import { createElement, createTextNode, Instance } from "./ReactDOMComponent"
 
 export function createInstance(
   type: string, 
@@ -39,4 +39,11 @@ export function appendChildToContainer(
   }
 
   // TODO... reactRootContainer
+}
+
+
+export function createTextInstance(text: string) {
+  const textNode = createTextNode(text)
+  // TODO: precacheFiberNode(internalInstanceHandle, textNode);
+  return textNode 
 }

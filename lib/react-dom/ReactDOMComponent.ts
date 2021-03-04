@@ -1,7 +1,7 @@
 import { debug } from "webpack"
 import setTextContent from "./utils/setTextContent"
 
-export type Instance = Element
+export type Instance = Element | Text
 
 export function createElement(type: string, props: Object) {
   // 源码还会判断一下环境，这里直接用document

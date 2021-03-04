@@ -1,5 +1,13 @@
-import { finalizeInitialChildren, Instance } from "@/react-dom/ReactDOMComponent"
-import { appendInitialChild, createInstance } from "@/react-dom/ReactDOMHostConfig"
+import {
+  createTextNode,
+  finalizeInitialChildren,
+  Instance,
+} from "@/react-dom/ReactDOMComponent"
+import {
+  appendInitialChild,
+  createInstance,
+  createTextInstance,
+} from "@/react-dom/ReactDOMHostConfig"
 import { FiberFlags, WorkTag } from "@/shared/constants"
 import FiberRoot from "./FiberRoot"
 import Fiber from "./ReactFiber"
@@ -10,7 +18,7 @@ const {
   HostRoot,
   HostComponent,
   ClassComponent,
-  HostText
+  HostText,
 } = WorkTag
 
 export function completeWork(
@@ -22,13 +30,7 @@ export function completeWork(
   const type = workInProgress.type
 
   switch (workInProgress.tag) {
-    case IndeterminateComponent:
-    case FunctionComponent:
-      return null
-    case ClassComponent: {
-      // TODO: deal with context...
-      return null
-    }
+    // TODO: ...other tag
     case HostRoot: {
       // TODO: deal with context...
       updateHostContainer(workInProgress)
@@ -45,25 +47,47 @@ export function completeWork(
       // }
 
       // TODO: Deal with context
-      if(!type) 
-        throw new Error("Complete Host Component Error, type should not be null")
+      if (!type)
+        throw new Error(
+          "Complete Host Component Error, type should not be null"
+        )
       const instance = createInstance(type, newProps, workInProgress)
-      
+
       // 将所有的子节点，加入到instance上面
-      appendAllChildren(
-        instance, workInProgress
-      )
+      appendAllChildren(instance, workInProgress)
 
       workInProgress.stateNode = instance
 
       // 完成初始化，主要是为element加上attribute
       // 这里会为element加上attribute
-      finalizeInitialChildren( instance, type, newProps )
+      finalizeInitialChildren(instance, type, newProps)
       // TODO: 处理markRef...
+      return null
+    }
+    case HostText: {
+      const newText = newProps
+      if (current && workInProgress.stateNode !== null) {
+        // TODO: 实现更新的情况
+        console.warn("completeWork HostText tag need implement update phase")
+      } else {
+        if(typeof newText !== 'string') {
+          throw new Error('completeWork HostText is not string, maybe it is a bug')
+        }
+        
+        // TODO: 处理context
+
+        workInProgress.stateNode = createTextInstance(
+          newText,
+          // rootContainerInstance,
+          // currentHostContext,
+          // workInProgress,
+        )
+      }
       return null
     }
   }
 
+  console.warn(`completeWork need implement new workTag: ${workInProgress.tag}`)
   return null
 }
 
@@ -75,16 +99,16 @@ export function completeWork(
  */
 function appendAllChildren(
   parent: Instance,
-  workInProgress: Fiber, 
+  workInProgress: Fiber
   // needsVisibilityToggle: boolean,
   // isHidden: boolean,
 ) {
   let node = workInProgress.child
-  while(node !== null) {
-    if(node.tag === HostComponent || node.tag === HostText) {
+  while (node !== null) {
+    if (node.tag === HostComponent || node.tag === HostText) {
       appendInitialChild(parent, node.stateNode as Instance)
     }
-    // TODO: else if (FundamentalComponent) 
+    // TODO: else if (FundamentalComponent)
     // TODO: 跳过 HostPortal
     else if (node.child !== null) {
       // 如果不是HostComponent等类型，会跳到子节点
@@ -95,19 +119,19 @@ function appendAllChildren(
     }
 
     // 结束遍历
-    if(node === workInProgress) {
+    if (node === workInProgress) {
       return
     }
 
     // 跳转到兄弟节点
     while (node.sibling === null) {
       if (node.return === null || node.return === workInProgress) {
-        return;
+        return
       }
-      node = node.return;
+      node = node.return
     }
-    node.sibling.return = node.return;
-    node = node.sibling;
+    node.sibling.return = node.return
+    node = node.sibling
   }
 }
 
@@ -115,7 +139,7 @@ function updateHostComponent(
   current: Fiber,
   workInProgress: Fiber,
   type: string,
-  newProps: any,
+  newProps: any
   // rootContainerInstance: Container,
 ) {
   // TODO: deal with context...
