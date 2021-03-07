@@ -1,7 +1,17 @@
 import { FiberFlags, WorkTag } from "@/shared/constants";
+import { IComponent } from "@/shared/interface";
 import { mountChildFibers, reconcileChildFibers } from "./ReactChildFiber";
 import Fiber from "./ReactFiber";
+import { renderWithHooks } from "./ReactFiberHooks";
 import { processUpdateQueue } from "./ReactUpdateQueue";
+
+const {
+  HostRoot,
+  HostComponent,
+  FunctionComponent,
+  IndeterminateComponent,
+  HostText
+} = WorkTag
 
 export function beginWork(
   current: Fiber | null,
@@ -17,17 +27,95 @@ export function beginWork(
   }
 
   switch (workInProgress.tag) {
-    case WorkTag.HostRoot:
+    // 如果是函数式组件，在初次render时，tag会初始化为 IndeterminateComponent
+    case IndeterminateComponent:
+      return mountIndeterminateComponent(current, workInProgress, workInProgress.type as IComponent)
+    case HostRoot:
       return updateHostRoot(current, workInProgress)
-    case WorkTag.HostComponent:
+    case HostComponent:
       return updateHostComponent(current, workInProgress)
+    case FunctionComponent: {
+      const Component = workInProgress.type as IComponent
+      const unresolvedProps = workInProgress.pendingProps
+      // 这个elementType预计也是为了update
+      // TODO: const resovledProps = workInProgress.elementType === Component
+      const resolvedProps = unresolvedProps
+
+      return updateFunctionComponent(
+        current, workInProgress, Component, resolvedProps
+      )
+    }
+    case HostText:
+      return null
   }
 
+  console.warn('beginWork need other case implements')
 }
+
+
 
 /**
  * 下面只要是根据WorkTag对应类型做更新
  */
+
+function mountIndeterminateComponent(
+  _current: Fiber | null,
+  workInProgress: Fiber,
+  Component: IComponent,
+  // lanes
+) {
+  // TODO 更新阶段处理
+  if(_current !== null) {
+    console.warn(' mount indeterminate current is not null')
+  }
+
+  const props = workInProgress.pendingProps
+
+  // TODO conetxt
+  // TODO renderWithHooks
+ const value = renderWithHooks( null, workInProgress, Component, props)
+
+  workInProgress.flags |= FiberFlags.PerformedWork
+
+  // TODO 判斷是ClassComponent的情況
+  // if(typeof value === 'object')...
+
+  // FunctionComponent的情况o
+  workInProgress.tag = FunctionComponent
+  reconcileChildren(null, workInProgress, value)
+  return workInProgress.child
+}
+
+
+function updateFunctionComponent(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  Component: IComponent,
+  nextProps: any,
+  // renderLanes: Lanse
+) {
+
+  let nextChildren = renderWithHooks(
+    current,
+    workInProgress,
+    Component,
+    nextProps,
+    // conext
+    // lanes
+  )
+
+  // TODO：update时复用fiber
+  // if(current !== null && !didReceiveUpdate)
+
+  workInProgress.flags |= FiberFlags.PerformedWork
+  reconcileChildren(
+    current,
+    workInProgress,
+    nextChildren,
+    // renderLanes
+  )
+  return workInProgress.child
+}
 
 /**
  * 更新HostRoot, 主要是reactDom.render(el,root)中的第二个参数root
@@ -63,7 +151,7 @@ function updateHostComponent(
 ) {
 
   const nextProps = workInProgress.pendingProps
-  const type = workInProgress.type
+  const type = workInProgress.type as string
 
   // 注意：这里获取nextChildren的方式和之前写过的updateHostRoot的处理方式不同
   let nextChildren = nextProps.children

@@ -31,6 +31,9 @@ export function completeWork(
 
   switch (workInProgress.tag) {
     // TODO: ...other tag
+    case IndeterminateComponent:
+    case FunctionComponent: 
+      return null
     case HostRoot: {
       // TODO: deal with context...
       updateHostContainer(workInProgress)
@@ -51,7 +54,7 @@ export function completeWork(
         throw new Error(
           "Complete Host Component Error, type should not be null"
         )
-      const instance = createInstance(type, newProps, workInProgress)
+      const instance = createInstance(type as string, newProps, workInProgress)
 
       // 将所有的子节点，加入到instance上面
       appendAllChildren(instance, workInProgress)
@@ -60,7 +63,7 @@ export function completeWork(
 
       // 完成初始化，主要是为element加上attribute
       // 这里会为element加上attribute
-      finalizeInitialChildren(instance, type, newProps)
+      finalizeInitialChildren(instance, type as string, newProps)
       // TODO: 处理markRef...
       return null
     }
@@ -115,7 +118,7 @@ function appendAllChildren(
       // 因为FunctionComponent和ClassComponent不是真实元素
       node.child.return = node
       node = node.child
-      return
+      continue
     }
 
     // 结束遍历

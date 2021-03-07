@@ -1,6 +1,6 @@
 import { Instance } from '@/react-dom/ReactDOMComponent'
 import { FiberFlags, RootTag, WorkTag } from '@/shared/constants'
-import { ReactElement, ReactEmpty } from '@/shared/interface'
+import { IComponent, ReactElement, ReactEmpty } from '@/shared/interface'
 import FiberRoot from './FiberRoot'
 import { UpdateQueue } from './interface'
 
@@ -20,7 +20,7 @@ export default class Fiber {
   tag: WorkTag
 
   // 表示Fiber的类型，function/class/div/span等标签名
-  type: string | null = null
+  type: string | IComponent | null = null
 
   stateNode?: FiberRoot | Instance
 

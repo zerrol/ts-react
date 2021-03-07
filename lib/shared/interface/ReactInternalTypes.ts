@@ -14,3 +14,5 @@ export type HookType =
   | 'useTransition'
   | 'useMutableSource'
   | 'useOpaqueIdentifier';
+
+  export type IComponent<Props = any> = (props: Props) => any
